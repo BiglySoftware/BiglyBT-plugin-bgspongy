@@ -18,12 +18,20 @@
 
 package com.biglybt.plugins.bgspongy;
 
+import java.security.MessageDigest;
+import java.security.Provider;
+import java.util.Map;
+
+import org.spongycastle.jcajce.provider.digest.SHA512.Digest;
+import org.spongycastle.jce.provider.BouncyCastleProvider;
+
 import com.biglybt.pif.*;
+import com.biglybt.pif.ipc.IPCException;
 
 
 public class 
 SpongyPlugin
-	implements UnloadablePlugin
+	implements Plugin
 {
 	public static void
 	load(
@@ -31,6 +39,8 @@ SpongyPlugin
 	{
 		pi.getPluginProperties().setProperty( "plugin.initialize.after.load", "true" );
 	}
+
+	private Provider 	provider;
 	
 	@Override
 	public void 
@@ -39,13 +49,38 @@ SpongyPlugin
 		
 		throws PluginException
 	{
+		try{
+			provider = new BouncyCastleProvider();
+			
+			// Security.addProvider( provider );
+			
+		}catch( Throwable e ){
+			
+			throw( new PluginException( e ));
+		}
 	}
 	
-	@Override
-	public void 
-	unload() 
-		
-		throws PluginException
+	public Object
+	getDigest(
+		Map<String,Object>		params )
+	
+		throws IPCException
 	{
+		if ( provider == null ){
+		
+			throw( new IPCException( "Provider not available" ));
+		}
+		
+		try{
+			String	alg = (String)params.get( "alg" );
+			
+			MessageDigest digest = Digest.getInstance( alg, provider );
+			
+			return( digest );
+			
+		}catch( Throwable e ){
+			
+			throw( new IPCException( e ));
+		}
 	}
 }
